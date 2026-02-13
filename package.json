@@ -1,0 +1,48 @@
+{
+  "name": "branchdb",
+  "version": "0.1.0",
+  "description": "Every git branch gets its own database. Auto-switch on checkout.",
+  "keywords": [
+    "database",
+    "git",
+    "branch",
+    "migration",
+    "postgresql",
+    "sqlite",
+    "cli",
+    "developer-tools",
+    "dx",
+    "devtools"
+  ],
+  "license": "MIT",
+  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TODO/branchdb"
+  },
+  "bin": {
+    "branchdb": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@rollup/rollup-win32-x64-msvc": "^4.57.1",
+    "commander": "^12.1.0",
+    "picocolors": "^1.1.1"
+  },
+  "optionalDependencies": {
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/pg": "^8.11.10",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2"
+  }
+}
