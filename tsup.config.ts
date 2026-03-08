@@ -6,6 +6,7 @@ export default defineConfig({
   dts: false,
   clean: true,
   minify: false,
+  external: ['pg'],
   banner: {
     js: '#!/usr/bin/env node',
   },
