@@ -60,10 +60,10 @@ export const git = {
 
   /** List all local branches */
   branches(): string[] {
-    const output = exec('git branch --format=%(refname:short)');
+    const output = exec('git branch --list');
     return output
       .split('\n')
-      .map((b) => b.trim())
+      .map((b) => b.replace(/^\*?\s+/, '').trim())
       .filter(Boolean);
   },
 

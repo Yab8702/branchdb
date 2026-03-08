@@ -62,9 +62,9 @@ describe('clean --stale logic', () => {
     gitExec('git checkout master');
 
     // feature/b doesn't exist in git — it's stale
-    const gitBranches = gitExec('git branch --format=%(refname:short)')
+    const gitBranches = gitExec('git branch --list')
       .split('\n')
-      .map((b) => b.trim())
+      .map((b) => b.replace(/^\*?\s+/, '').trim())
       .filter(Boolean);
 
     const cfg = config.read(TEST_DIR);
@@ -100,9 +100,9 @@ describe('clean --stale logic', () => {
       createdAt: new Date().toISOString(),
     });
 
-    const gitBranches = gitExec('git branch --format=%(refname:short)')
+    const gitBranches = gitExec('git branch --list')
       .split('\n')
-      .map((b) => b.trim())
+      .map((b) => b.replace(/^\*?\s+/, '').trim())
       .filter(Boolean);
 
     const cfg = config.read(TEST_DIR);
