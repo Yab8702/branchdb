@@ -7,7 +7,8 @@ import {
   mkdirSync,
 } from 'fs';
 import { join, dirname } from 'path';
-import { DbDriver } from './types';
+import { DbDriver, TableInfo } from './types';
+import { exec } from '../utils/helpers';
 
 export class SqliteDriver implements DbDriver {
   private snapshotDir: string;
@@ -99,5 +100,56 @@ export class SqliteDriver implements DbDriver {
 
   async disconnect(): Promise<void> {
     // Nothing to close for SQLite file operations
+  }
+
+  async getSchema(database: string): Promise<TableInfo[]> {
+    const dbPath = this.resolvePath(database);
+    if (!existsSync(dbPath)) return [];
+
+    // Use sqlite3 CLI to get schema info
+    const tablesRaw = exec(
+      `sqlite3 "${dbPath}" ".tables"`,
+      { cwd: this.projectRoot }
+    );
+    if (!tablesRaw) return [];
+
+    const tableNames = tablesRaw
+      .split(/\s+/)
+      .map((t) => t.trim())
+      .filter(Boolean);
+
+    const tables: TableInfo[] = [];
+    for (const name of tableNames) {
+      const pragmaRaw = exec(
+        `sqlite3 "${dbPath}" "PRAGMA table_info(${name});"`,
+        { cwd: this.projectRoot }
+      );
+
+      if (!pragmaRaw) {
+        tables.push({ name, columns: [] });
+        continue;
+      }
+
+      // PRAGMA table_info returns: cid|name|type|notnull|dflt_value|pk
+      const columns = pragmaRaw.split('\n').map((line) => {
+        const parts = line.split('|');
+        return {
+          name: parts[1] || '',
+          type: parts[2] || '',
+          nullable: parts[3] !== '1',
+          defaultValue: parts[4] || null,
+        };
+      }).filter(c => c.name);
+
+      tables.push({ name, columns });
+    }
+    return tables;
+  }
+
+  async ping(): Promise<boolean> {
+    // SQLite is always "available" if the file exists
+    const parsed = this.connectionUrl.replace(/^file:/, '').split('?')[0];
+    const p = join(this.projectRoot, parsed);
+    return existsSync(p);
   }
 }
