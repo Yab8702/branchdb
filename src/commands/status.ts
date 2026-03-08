@@ -5,7 +5,7 @@ import { config } from '../core/config';
 import { log } from '../utils/logger';
 import pc from 'picocolors';
 
-export async function statusCommand() {
+export async function statusCommand(options: { json?: boolean }) {
   const root = git.root();
   const cfg = config.read(root);
   const currentBranch = git.currentBranch();
@@ -14,6 +14,28 @@ export async function statusCommand() {
   const currentEntry = config.getBranch(root, currentBranch);
   const currentEnvUrl = env.read(envPath, cfg.envKey);
   const branchCount = Object.keys(cfg.branches).length;
+  const inSync = !!currentEntry && currentEnvUrl === currentEntry.url;
+
+  if (options.json) {
+    console.log(
+      JSON.stringify(
+        {
+          branch: currentBranch,
+          driver: cfg.driver,
+          baseBranch: cfg.baseBranch,
+          envFile: cfg.envFile,
+          envKey: cfg.envKey,
+          branchCount,
+          database: currentEntry?.database ?? null,
+          url: currentEntry?.url ?? null,
+          inSync: currentEntry ? inSync : null,
+        },
+        null,
+        2
+      )
+    );
+    return;
+  }
 
   console.log('');
   log.info('branchdb status');
@@ -35,9 +57,8 @@ export async function statusCommand() {
       ['URL:', currentEntry.url],
     ]);
 
-    // Check if .env matches config
-    if (currentEnvUrl !== currentEntry.url) {
-      console.log('');
+    console.log('');
+    if (!inSync) {
       log.warn(
         `${cfg.envKey} in ${cfg.envFile} doesn't match branch database!`
       );
@@ -45,7 +66,6 @@ export async function statusCommand() {
       log.dim(`  Actual:   ${currentEnvUrl}`);
       log.dim(`  Fix: ${pc.white('branchdb switch')}`);
     } else {
-      console.log('');
       log.success('Environment is in sync.');
     }
   } else {
