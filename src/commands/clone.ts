@@ -2,27 +2,17 @@ import { join } from 'path';
 import { git } from '../core/git';
 import { env } from '../core/env';
 import { config, BranchEntry } from '../core/config';
-import {
-  sanitizeBranchName,
-  buildConnectionUrl,
-  parseConnectionUrl,
-} from '../utils/helpers';
+import { generateDbName, buildConnectionUrl, execLive } from '../utils/helpers';
+import { getDriver } from '../core/driver-factory';
+import { detectOrm } from '../core/detector';
+import { getAutoMigrateCommand } from './migrate';
 import { log } from '../utils/logger';
-import { PostgresDriver } from '../drivers/postgres';
-import { SqliteDriver } from '../drivers/sqlite';
-import type { DbDriver } from '../drivers/types';
 import pc from 'picocolors';
-
-function getDriver(cfg: { driver: string; baseUrl: string }, root: string): DbDriver {
-  if (cfg.driver === 'postgres') {
-    return new PostgresDriver(cfg.baseUrl);
-  }
-  return new SqliteDriver(cfg.baseUrl, root);
-}
 
 export async function cloneCommand(options: {
   from?: string;
   to?: string;
+  migrate?: boolean;
 }) {
   const root = git.root();
   const cfg = config.read(root);
@@ -46,7 +36,7 @@ export async function cloneCommand(options: {
     log.warn(`Branch ${pc.cyan(targetBranch)} already has a database.`);
     log.dim(`  Database: ${existing.database}`);
     log.dim(
-      `  To recreate: branchdb clean ${targetBranch} && branchdb clone`
+      `  To recreate: branchdb reset`
     );
     return;
   }
@@ -60,20 +50,9 @@ export async function cloneCommand(options: {
     process.exit(1);
   }
 
-  // Generate target database name
-  const parsed = parseConnectionUrl(cfg.baseUrl);
-  const sanitized = sanitizeBranchName(targetBranch);
-
-  let targetDb: string;
-  if (cfg.driver === 'postgres') {
-    targetDb = `${parsed.database}_branchdb_${sanitized}`;
-  } else {
-    targetDb = `.branchdb/snapshots/${sanitized}.db`;
-  }
-
+  const targetDb = generateDbName(cfg, targetBranch);
   const targetUrl = buildConnectionUrl(cfg.baseUrl, targetDb, cfg.driver);
 
-  // Clone the database
   log.info(`Cloning database for branch ${pc.cyan(targetBranch)}...`);
   log.dim(`  From: ${sourceEntry.database}`);
   log.dim(`  To:   ${targetDb}`);
@@ -85,7 +64,6 @@ export async function cloneCommand(options: {
     await driver.clone(sourceEntry.database, targetDb);
     const elapsed = Date.now() - start;
 
-    // Register in config
     const entry: BranchEntry = {
       database: targetDb,
       url: targetUrl,
@@ -93,7 +71,6 @@ export async function cloneCommand(options: {
     };
     config.setBranch(root, targetBranch, entry);
 
-    // Update .env to point to new database
     const envPath = join(root, cfg.envFile);
     env.write(envPath, cfg.envKey, targetUrl);
 
@@ -102,11 +79,35 @@ export async function cloneCommand(options: {
     log.dim(`  Branch:   ${pc.cyan(targetBranch)}`);
     log.dim(`  Database: ${pc.white(targetDb)}`);
     log.dim(`  ${cfg.envKey} updated in ${cfg.envFile}`);
+
+    if (options.migrate) {
+      runMigrate(root);
+    }
+
     console.log('');
   } catch (err: any) {
     log.error(`Failed to clone database: ${err.message}`);
     process.exit(1);
   } finally {
     await driver.disconnect();
+  }
+}
+
+function runMigrate(root: string): void {
+  const detection = detectOrm(root);
+  const cmd = getAutoMigrateCommand(detection.orm);
+  if (!cmd) {
+    log.dim('  No ORM detected — skipping migrations.');
+    return;
+  }
+
+  console.log('');
+  log.info(`Running migrations: ${pc.white(cmd)}`);
+
+  try {
+    execLive(cmd, { cwd: root });
+    log.success('Migrations applied.');
+  } catch {
+    log.error('Migration failed. Run manually: branchdb migrate');
   }
 }
