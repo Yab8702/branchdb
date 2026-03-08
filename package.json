@@ -9,16 +9,24 @@
     "migration",
     "postgresql",
     "sqlite",
+    "mysql",
     "cli",
     "developer-tools",
     "dx",
-    "devtools"
+    "devtools",
+    "database-branching",
+    "prisma",
+    "drizzle"
   ],
   "license": "MIT",
-  "author": "",
+  "author": "Yalelet Dessalegn",
   "repository": {
     "type": "git",
-    "url": "https://github.com/TODO/branchdb"
+    "url": "https://github.com/Yab8702/branchdb"
+  },
+  "homepage": "https://github.com/Yab8702/branchdb#readme",
+  "bugs": {
+    "url": "https://github.com/Yab8702/branchdb/issues"
   },
   "bin": {
     "branchdb": "./dist/index.js"
@@ -29,20 +37,23 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
-    "@rollup/rollup-win32-x64-msvc": "^4.57.1",
-    "commander": "^12.1.0",
+    "commander": "^14.0.3",
     "picocolors": "^1.1.1"
   },
   "optionalDependencies": {
-    "pg": "^8.13.1"
+    "pg": "^8.18.0",
+    "mysql2": "^3.11.0"
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
-    "@types/pg": "^8.11.10",
-    "tsup": "^8.3.5",
-    "typescript": "^5.7.2"
+    "@types/node": "^22.15.0",
+    "@types/pg": "^8.16.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   }
 }
