@@ -9,15 +9,15 @@ import {
 } from 'fs';
 import { join } from 'path';
 
-const HOOK_MARKER = '# branchdb:auto-switch';
+export const HOOK_MARKER = '# branchdb:auto-switch';
 
 const HOOK_BLOCK = `
 ${HOOK_MARKER}
 # branchdb: auto-switch database on branch checkout
-# Remove this hook with: branchdb init --no-hook
+# Remove this hook with: branchdb uninit
 if [ "$3" = "1" ]; then
   if command -v npx >/dev/null 2>&1; then
-    npx branchdb switch --auto 2>/dev/null || true
+    npx branchdb switch --auto 2>&1 || true
   fi
 fi
 # branchdb:end`;
@@ -30,10 +30,18 @@ export const git = {
 
   /** Get the root directory of the git repo */
   root(): string {
-    const root = exec('git rev-parse --show-toplevel');
-    if (!root) throw new Error('Not inside a git repository');
-    // Normalize Windows paths
-    return root.replace(/\//g, '\\');
+    const raw = exec('git rev-parse --show-toplevel');
+    if (!raw) throw new Error('Not inside a git repository');
+
+    // Git on Windows (Git Bash / MINGW) returns Unix-style paths: /c/Users/...
+    // Convert to Windows-style: C:\Users\...
+    if (process.platform === 'win32') {
+      return raw
+        .replace(/^\/([a-zA-Z])\//, '$1:\\')
+        .replace(/\//g, '\\');
+    }
+
+    return raw;
   },
 
   /** Get the current branch name */
@@ -86,7 +94,7 @@ export const git = {
     }
   },
 
-  /** Remove branchdb hook from post-checkout */
+  /** Remove branchdb hook block from post-checkout */
   removeHook(repoRoot: string): void {
     const hookPath = join(repoRoot, '.git', 'hooks', 'post-checkout');
     if (!existsSync(hookPath)) return;
@@ -104,5 +112,12 @@ export const git = {
     } else {
       writeFileSync(hookPath, cleaned + '\n');
     }
+  },
+
+  /** Check if the branchdb hook block is installed (not just if the file exists) */
+  isHookInstalled(repoRoot: string): boolean {
+    const hookPath = join(repoRoot, '.git', 'hooks', 'post-checkout');
+    if (!existsSync(hookPath)) return false;
+    return readFileSync(hookPath, 'utf-8').includes(HOOK_MARKER);
   },
 };

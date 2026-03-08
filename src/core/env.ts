@@ -9,7 +9,7 @@ export const env = {
     if (!existsSync(envFile)) return null;
 
     const content = readFileSync(envFile, 'utf-8');
-    const lines = content.split('\n');
+    const lines = content.split(/\r?\n/);
 
     for (const line of lines) {
       const trimmed = line.trim();
@@ -35,7 +35,8 @@ export const env = {
   },
 
   /**
-   * Write/update a key in a .env file. Preserves comments and other keys.
+   * Write/update a key in a .env file. Preserves comments, other keys,
+   * and the original line ending style (LF or CRLF).
    */
   write(envFile: string, key: string, value: string): void {
     if (!existsSync(envFile)) {
@@ -44,7 +45,9 @@ export const env = {
     }
 
     const content = readFileSync(envFile, 'utf-8');
-    const lines = content.split('\n');
+    // Detect and preserve the file's line ending style
+    const lineEnding = content.includes('\r\n') ? '\r\n' : '\n';
+    const lines = content.split(/\r?\n/);
     let found = false;
 
     const updated = lines.map((line) => {
@@ -73,7 +76,7 @@ export const env = {
       updated.push(`${key}="${value}"`);
     }
 
-    writeFileSync(envFile, updated.join('\n'));
+    writeFileSync(envFile, updated.join(lineEnding));
   },
 
   /**
