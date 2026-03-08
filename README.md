@@ -3,11 +3,9 @@
   <p align="center">Every git branch gets its own database. Auto-switch on checkout.</p>
 </p>
 
-<p align="center">
-  <a href="https://www.npmjs.com/package/branchdb"><img src="https://img.shields.io/npm/v/branchdb.svg" alt="npm version"></a>
-  <a href="https://www.npmjs.com/package/branchdb"><img src="https://img.shields.io/npm/dm/branchdb.svg" alt="npm downloads"></a>
-  <a href="https://github.com/ArslanYM/branchdb/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/branchdb.svg" alt="license"></a>
-</p>
+[![CI](https://github.com/yab8702/branchdb/actions/workflows/ci.yml/badge.svg)](https://github.com/yab8702/branchdb/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![npm](https://img.shields.io/npm/v/branchdb)](https://www.npmjs.com/package/branchdb)
 
 ---
 
@@ -323,36 +321,6 @@ your-project/
 ```
 
 The `.branchdb/` directory is automatically added to `.gitignore`.
-
-## FAQ
-
-### Does this work with migrations?
-
-Yes. Each branch has its own database, so migrations on `feature/auth` don't affect `main`. Enable `--auto-migrate` to have migrations run automatically on branch switch.
-
-### What happens when I merge?
-
-When you merge `feature/auth` into `main`, the migration files get merged. Run your ORM's migrate command on `main` to apply them. If you have `--auto-migrate` enabled, this happens automatically.
-
-### Does this solve ORM migration file conflicts?
-
-No. If two branches create migration files with the same name or conflicting timestamps, that's an ORM-level problem. branchdb solves **database state isolation** — each branch gets its own database so schema changes don't collide at runtime. Migration file conflicts need to be resolved at the git/ORM level.
-
-### Does this work in CI/CD?
-
-branchdb is for **local development only**. In CI, you typically spin up fresh databases anyway.
-
-### What about disk space?
-
-PostgreSQL `TEMPLATE` uses copy-on-write on supported filesystems, so cloned databases start with near-zero extra space. SQLite snapshots are full copies but typically small for dev databases. Use `branchdb list` to see database sizes, and `branchdb clean --stale` to clean up old branches.
-
-### Can I use this with Docker?
-
-Yes, as long as your app connects via `DATABASE_URL` in `.env`, branchdb works regardless of where PostgreSQL/MySQL/SQLite is running.
-
-### How is this different from Neon/Supabase branching?
-
-Neon and Supabase offer cloud database branching. branchdb is for **local development** — it works with your local PostgreSQL/MySQL/SQLite, requires no cloud service, and is completely free. If you're already using Neon branching in production, branchdb still makes sense for local dev where you don't want to hit cloud APIs on every `git checkout`.
 
 ## Contributing
 
