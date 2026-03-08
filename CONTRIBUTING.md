@@ -32,7 +32,7 @@ branchdb/
 ### Prerequisites
 
 - Node.js >= 18
-- pnpm >= 9
+- npm >= 9 (bundled with Node.js)
 
 ### Setup
 
@@ -42,32 +42,32 @@ git clone https://github.com/Yab8702/branchdb.git
 cd branchdb
 
 # 2. Install dependencies
-pnpm install
+npm install
 
 # 3. Build
-pnpm build
+npm run build
 
 # 4. Run tests
-pnpm test
+npm test
 ```
 
 ### Development Workflow
 
 ```bash
 # Watch mode (rebuilds on change)
-pnpm dev
+npm run dev
 
 # Type check
-pnpm typecheck
+npm run typecheck
 
 # Run tests
-pnpm test
-pnpm test:watch
+npm test
+npm run test:watch
 ```
 
 ## Contributing Workflow
 
-1. **Create a branch** from `main`:
+1. **Create a branch** from `master`:
    ```bash
    git checkout -b type/description
    ```
@@ -87,9 +87,9 @@ pnpm test:watch
 
 3. **Test thoroughly**:
    ```bash
-   pnpm test
-   pnpm build
-   pnpm typecheck
+   npm test
+   npm run build
+   npm run typecheck
    ```
 
 4. **Commit** with [Conventional Commits](https://www.conventionalcommits.org/):
@@ -99,7 +99,7 @@ pnpm test:watch
    git commit -m "docs: add shell prompt integration example"
    ```
 
-5. **Open a PR** against `main`
+5. **Open a PR** against `master`
 
 ## Where to Contribute
 
@@ -150,10 +150,10 @@ Then register it in `src/core/driver-factory.ts`.
 
 ```bash
 # All tests
-pnpm test
+npm test
 
 # Watch mode
-pnpm test:watch
+npm run test:watch
 ```
 
 Integration tests in `tests/integration/` require a live database connection. Set `DATABASE_URL` in your environment to run them.
