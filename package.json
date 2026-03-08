@@ -19,6 +19,7 @@
     "drizzle"
   ],
   "license": "MIT",
+  "type": "module",
   "author": "Yalelet Dessalegn",
   "repository": {
     "type": "git",
@@ -29,7 +30,7 @@
     "url": "https://github.com/Yab8702/branchdb/issues"
   },
   "bin": {
-    "branchdb": "./dist/index.js"
+    "branchdb": "./dist/index.cjs"
   },
   "files": [
     "dist"
